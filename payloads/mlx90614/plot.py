@@ -1,36 +1,45 @@
 import serial
+import time
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 from collections import deque
 
-# Adjust this to your Arduino's serial port
-SERIAL_PORT = 'COM3'  # or '/dev/ttyUSB0' on Linux/Mac
-BAUD_RATE = 9600
+# Serial connection
+ser = serial.Serial('COM3', 9600, timeout=1) #Update with your COM port
+time.sleep(2) # Allow Arduino/ESP32 to reset
 
-# Initialize serial connection
-ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
+# Data storage
+max_len = 100 # How many data points to show on graph
+data = deque([0]*max_len, maxlen=max_len) # Rolling buffer
 
-# Data buffer
-max_points = 100
-temps = deque([0]*max_points, maxlen=max_points)
-
-# Setup plot
+# Plot setup
 fig, ax = plt.subplots()
-line, = ax.plot(range(max_points), temps)
-ax.set_ylim(20, 50)  # Adjust based on expected temperature range
-ax.set_title("Live MLX90614 Temperature Readings")
-ax.set_xlabel("Time (s)")
-ax.set_ylabel("Temperature (°C)")
+line, = ax.plot(data)
+ax.set_ylim(0, 100) # Adjust Y-axis range to your sensor values
+ax.set_title("Live Sensor Data")
+ax.set_xlabel("Time (latest on right)")
+ax.set_ylabel("Sensor Value")
 
+# Animation function
 def update(frame):
-    try:
-        raw = ser.readline().decode('utf-8').strip()
-        temp = float(raw)
-        temps.append(temp)
-        line.set_ydata(temps)
-    except:
-        pass
+    if ser.in_waiting > 0:
+        try:
+            value = ser.readline().decode('utf-8').strip()
+            if value:
+                val_float = float(value)
+                data.append(val_float)
+                line.set_ydata(data)
+                line.set_xdata(range(len(data)))
+        except:
+            pass
     return line,
 
-ani = FuncAnimation(fig, update, interval=1000)
+# Start animation
+ani = animation.FuncAnimation(fig, update, interval=100)
 plt.show()
+
+# Close serial on exit
+ser.close()
+
+# Close serial on exit
+ser.close()
