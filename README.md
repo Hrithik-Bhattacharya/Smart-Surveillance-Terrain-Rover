@@ -72,3 +72,8 @@ Smart-Surveillance-Terrain-Rover/
 Refactored `plot.py` supports real-time plotting of sensor data using `matplotlib` and `pyserial`. Easily extendable to support new sensors.
 
 ---
+
+
+### Contributors
+
+We welcome contributions of any kind to the enhancement of this project. Please make sure to create an issue and submit a pull request for the same.
